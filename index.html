@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gefriertruhe</title>
+<meta name="theme-color" content="#0f6b8f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gefriertruhe">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f2f6f9; --surface:#ffffff; --surface-2:#e8eff4; --text:#13232e; --muted:#5d7180; --line:#dce5eb;
+  --accent:#0f6b8f; --accent-text:#ffffff;
+  --ok:#2f9e5b; --ok-bg:#e3f4ea; --warn:#b97f05; --warn-bg:#fbf0d6; --bad:#d6453d; --bad-bg:#fbe4e2; --none:#8798a5; --none-bg:#eaeff2;
+  --shadow:0 1px 2px rgba(10,30,45,.06),0 4px 14px rgba(10,30,45,.06);
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0c141a; --surface:#15212a; --surface-2:#1d2c37; --text:#e6eef3; --muted:#91a5b2; --line:#24343f;
+    --accent:#3aa7d0; --accent-text:#05202b;
+    --ok:#4cc27c; --ok-bg:#16301f; --warn:#e7b43c; --warn-bg:#352a10; --bad:#f06a61; --bad-bg:#3a1a18; --none:#8a9ba7; --none-bg:#1f2a32;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 110px)}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+header h1{font-size:1.5rem;margin:0;letter-spacing:-.01em}
+header .sub{color:var(--muted);font-size:.9rem}
+.icon-btn{border:0;background:var(--surface);box-shadow:var(--shadow);width:42px;height:42px;border-radius:50%;
+  font-size:1.15rem;cursor:pointer;display:grid;place-items:center;flex:none}
+
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 14px;font-size:16px;outline:none}
+.search:focus{border-color:var(--accent)}
+.chips{display:flex;gap:8px;margin:10px 0 14px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.9rem;white-space:nowrap;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+
+.list{display:flex;flex-direction:column;gap:10px;padding:0;margin:0;list-style:none}
+.item{display:flex;align-items:stretch;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
+  overflow:hidden;cursor:pointer;border:1px solid transparent;text-align:left;width:100%;padding:0}
+.item:active{transform:scale(.99)}
+.bar{width:6px;flex:none}
+.item .body{flex:1;min-width:0;padding:12px 12px 12px 14px}
+.item .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.item .name{font-weight:650;font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .meta{color:var(--muted);font-size:.9rem;margin-top:2px}
+.item .dates{color:var(--muted);font-size:.8rem;margin-top:4px}
+.pill{font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;flex:none}
+.l-ok .bar{background:var(--ok)} .l-ok .pill{background:var(--ok-bg);color:var(--ok)}
+.l-warn .bar{background:var(--warn)} .l-warn .pill{background:var(--warn-bg);color:var(--warn)}
+.l-bad .bar{background:var(--bad)} .l-bad .pill{background:var(--bad-bg);color:var(--bad)}
+.l-none .bar{background:var(--none)} .l-none .pill{background:var(--none-bg);color:var(--none)}
+
+.empty{text-align:center;color:var(--muted);padding:48px 16px}
+.empty .big{font-size:3rem}
+.link{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:4px}
+
+.fab{position:fixed;right:max(20px,calc(50% - 260px));bottom:calc(env(safe-area-inset-bottom) + 22px);width:62px;height:62px;border-radius:50%;
+  border:0;background:var(--accent);color:var(--accent-text);font-size:2rem;line-height:1;box-shadow:0 6px 20px rgba(15,107,143,.35);cursor:pointer}
+
+dialog{border:0;padding:0;background:var(--surface);color:var(--text);width:100%;max-width:560px;max-height:92vh;
+  margin:auto auto 0;border-radius:22px 22px 0 0}
+dialog::backdrop{background:rgba(5,15,22,.45)}
+@media (min-width:640px){dialog{margin:auto;border-radius:22px}}
+.sheet{padding:18px 18px calc(env(safe-area-inset-bottom) + 18px)}
+.sheet h2{margin:0 0 14px;font-size:1.25rem;display:flex;justify-content:space-between;align-items:center}
+.close{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 5px;font-weight:600}
+.field{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;font-size:16px;outline:none;appearance:none;-webkit-appearance:none}
+.field:focus{border-color:var(--accent)}
+select.field{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.quick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:.82rem;cursor:pointer}
+.hint{margin-top:14px;padding:11px 13px;border-radius:12px;font-size:.92rem;background:var(--surface-2)}
+.hint.l-ok{background:var(--ok-bg)} .hint.l-warn{background:var(--warn-bg)} .hint.l-bad{background:var(--bad-bg)}
+.actions{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;border:0;border-radius:12px;padding:14px;font-weight:650;cursor:pointer;font-size:1rem}
+.btn.primary{background:var(--accent);color:var(--accent-text)}
+.btn.done{background:var(--ok-bg);color:var(--ok)}
+.err{color:var(--bad);font-size:.85rem;margin-top:5px;display:none}
+
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+td{padding:9px 4px;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right;color:var(--muted);white-space:nowrap}
+.note{color:var(--muted);font-size:.82rem;margin-top:12px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(140%);bottom:calc(env(safe-area-inset-bottom) + 100px);
+  background:#13232e;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;gap:12px;align-items:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .25s,opacity .25s;max-width:calc(100% - 32px);z-index:10;
+  opacity:0;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+.toast button{background:none;border:0;color:#7fd3f2;font-weight:700;cursor:pointer;padding:6px 8px}
+.toast button[hidden]{display:none}
+
+.login{position:fixed;inset:0;background:var(--bg);z-index:20;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.login[hidden]{display:none}
+.login form{width:100%;max-width:380px;background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:24px 20px}
+.login h1{margin:0 0 4px;font-size:1.5rem}
+.login p{margin:0 0 8px;color:var(--muted)}
+.btn.secondary{background:var(--surface-2);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>❄️ Gefriertruhe</h1>
+      <div class="sub" id="count"></div>
+    </div>
+    <button class="icon-btn" id="infoBtn" aria-label="Haltbarkeit">ⓘ</button>
+  </header>
+
+  <input class="search" id="search" type="search" placeholder="Suchen…" autocomplete="off">
+  <div class="chips" id="chips" role="group" aria-label="Filter"></div>
+
+  <ul class="list" id="list"></ul>
+  <div class="empty" id="empty" hidden></div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="Hinzufügen">+</button>
+
+<dialog id="sheet">
+  <form class="sheet" id="form" method="dialog" novalidate>
+    <h2><span id="sheetTitle">Einfrieren</span><button type="button" class="close" data-close aria-label="Schließen">✕</button></h2>
+
+    <label for="fName">Was?</label>
+    <input class="field" id="fName" list="names" placeholder="z. B. Hackfleisch, Bolognese…" autocomplete="off" required>
+    <datalist id="names"></datalist>
+    <div class="err" id="nameErr">Bitte einen Namen eingeben.</div>
+
+    <label for="fCat">Kategorie</label>
+    <select class="field" id="fCat"></select>
+
+    <div class="row">
+      <div>
+        <label for="fDate">Eingefroren am</label>
+        <input class="field" id="fDate" type="date">
+      </div>
+      <div>
+        <label for="fAmount">Menge (ca.)</label>
+        <input class="field" id="fAmount" placeholder="z. B. 500 g" autocomplete="off">
+      </div>
+    </div>
+    <div class="quick" id="quick"></div>
+
+    <div class="hint" id="hint"></div>
+
+    <div class="actions">
+      <button type="button" class="btn done" id="doneBtn" hidden>✓ Aufgebraucht</button>
+      <button type="submit" class="btn primary" id="saveBtn">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="info">
+  <div class="sheet">
+    <h2>Wie lange einfrieren?<button type="button" class="close" data-close aria-label="Schließen">✕</button></h2>
+    <table id="infoTable"></table>
+    <p class="note">Richtwerte bei −18 °C. Danach ist es nicht sofort schlecht, aber Geschmack und Konsistenz lassen nach.
+      🟢 gut · 🟡 Empfehlung bald erreicht · 🔴 Empfehlung überschritten</p>
+    <div class="actions" id="accountBox" hidden>
+      <button type="button" class="btn secondary" id="logoutBtn">Abmelden</button>
+    </div>
+    <p class="note" id="userInfo"></p>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastUndo">Rückgängig</button></div>
+
+<div class="login" id="login" hidden>
+  <form id="loginForm" novalidate>
+    <h1>❄️ Gefriertruhe</h1>
+    <p>Bitte anmelden</p>
+    <label for="lEmail">E-Mail</label>
+    <input class="field" id="lEmail" type="email" autocomplete="username" required>
+    <label for="lPass">Passwort</label>
+    <input class="field" id="lPass" type="password" autocomplete="current-password" required>
+    <div class="err" id="loginErr"></div>
+    <div class="actions"><button type="submit" class="btn primary" id="loginBtn">Anmelden</button></div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+/* ---------- Kategorien & Haltbarkeit (Monate) ---------- */
+const CATS = [
+  {id:'hack',       name:'Hackfleisch',       icon:'🥩', min:1, max:3},
+  {id:'schwein',    name:'Schwein',           icon:'🐖', min:4, max:7},
+  {id:'rind',       name:'Rind / Wild',       icon:'🐄', min:6, max:12},
+  {id:'gefluegel',  name:'Geflügel',          icon:'🍗', min:6, max:10},
+  {id:'fisch_fett', name:'Fisch (fettig)',    icon:'🐟', min:2, max:3},
+  {id:'fisch_mager',name:'Fisch (mager)',     icon:'🐠', min:6, max:6},
+  {id:'gekocht',    name:'Gekochtes / Reste', icon:'🍲', min:2, max:3},
+  {id:'suppe',      name:'Suppen / Soßen',    icon:'🥣', min:3, max:6},
+  {id:'gemuese',    name:'Gemüse',            icon:'🥦', min:6, max:12},
+  {id:'obst',       name:'Obst',              icon:'🍓', min:8, max:12},
+  {id:'brot',       name:'Brot / Backwaren',  icon:'🍞', min:1, max:3},
+  {id:'kaese',      name:'Käse',              icon:'🧀', min:2, max:4},
+  {id:'butter',     name:'Butter',            icon:'🧈', min:6, max:6},
+  {id:'kraeuter',   name:'Kräuter',           icon:'🌿', min:6, max:12},
+  {id:'sonstiges',  name:'Sonstiges',         icon:'📦', min:null, max:null},
+];
+const catById = id => CATS.find(c => c.id === id) || CATS[CATS.length-1];
+const rangeLabel = c => c.max == null ? 'keine Angabe' : (c.min === c.max ? `${c.max} Monate` : `${c.min}–${c.max} Monate`);
+const QUICK_AMOUNTS = ['1 Portion','2 Portionen','4 Portionen','250 g','500 g','1 kg','1 Beutel','1 Dose'];
+
+/* ---------- Speicher: Supabase, sonst lokal ---------- */
+const CFG = window.GEFRIER_CONFIG || {};
+const sb = (CFG.url && CFG.anonKey && window.supabase) ? window.supabase.createClient(CFG.url, CFG.anonKey) : null;
+const COLS = 'id,name,category,frozen_at,amount,created_at';
+const RemoteStore = {
+  async list(){ const {data, error} = await sb.from('items').select(COLS); if (error) throw error; return data; },
+  async add(item){ const {id, name, category, frozen_at, amount, created_at} = item;
+    const {error} = await sb.from('items').insert({id, name, category, frozen_at, amount, created_at}); if (error) throw error; },
+  async update(id, patch){ const {error} = await sb.from('items').update(patch).eq('id', id); if (error) throw error; },
+  async remove(id){ const {error} = await sb.from('items').delete().eq('id', id); if (error) throw error; },
+};
+const LocalStore = {
+  key: 'gefriertruhe.items.v1',
+  _read(){ try { return JSON.parse(localStorage.getItem(this.key)) || []; } catch { return []; } },
+  _write(items){ try { localStorage.setItem(this.key, JSON.stringify(items)); } catch {} },
+  async list(){ return this._read(); },
+  async add(item){ const a = this._read(); a.push(item); this._write(a); return item; },
+  async update(id, patch){ const a = this._read().map(i => i.id === id ? {...i, ...patch} : i); this._write(a); },
+  async remove(id){ this._write(this._read().filter(i => i.id !== id)); },
+};
+const Store = sb ? RemoteStore : LocalStore;
+const newId = () => crypto.randomUUID ? crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === 'x' ? r : (r&3|8)).toString(16); });
+const Names = {
+  key: 'gefriertruhe.names.v1',
+  get(){ try { return JSON.parse(localStorage.getItem(this.key)) || {}; } catch { return {}; } },
+  remember(name, category){ const m = this.get(); m[name.trim().toLowerCase()] = {name:name.trim(), category};
+    try { localStorage.setItem(this.key, JSON.stringify(m)); } catch {} },
+};
+
+/* ---------- Datum-Helfer ---------- */
+const DAY = 864e5;
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const toISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addMonths = (date, n) => { const d = new Date(date), day = d.getDate(); d.setMonth(d.getMonth()+n); if (d.getDate() < day) d.setDate(0); return d; };
+const daysBetween = (a, b) => Math.round((b - a) / DAY);
+const fmt = d => d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+function dur(d, dat){
+  if (d < 14) return `${d} ${d === 1 ? 'Tag' : (dat ? 'Tagen' : 'Tage')}`;
+  if (d < 60) { const w = Math.round(d/7); return `${w} ${w === 1 ? 'Woche' : 'Wochen'}`; }
+  const m = Math.round(d/30.44); return `${m} ${m === 1 ? 'Monat' : (dat ? 'Monaten' : 'Monate')}`;
+}
+
+/* ---------- Ampel ---------- */
+function status(category, frozenISO){
+  const c = catById(category), f = parseISO(frozenISO), now = today0();
+  if (c.max == null) {
+    const s = daysBetween(f, now);
+    return {level:'none', label: s <= 0 ? 'seit heute' : `seit ${dur(s, true)}`, end:null};
+  }
+  const end = addMonths(f, c.max);
+  const warnStart = addMonths(f, c.min < c.max ? c.min : c.max - 1);
+  const left = daysBetween(now, end);
+  if (left < 0) return {level:'bad', label:`${dur(-left)} drüber`, end};
+  if (left === 0) return {level:'warn', label:'heute letzter Tag', end};
+  return {level: now >= warnStart ? 'warn' : 'ok', label:`noch ${dur(left)}`, end};
+}
+
+/* ---------- UI ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let items = [], filter = 'all', editingId = null, catTouched = false;
+
+const FILTERS = [
+  {id:'all',  label:'Alle'},
+  {id:'bad',  label:'🔴 Drüber'},
+  {id:'warn', label:'🟡 Bald'},
+  {id:'ok',   label:'🟢 Gut'},
+];
+
+function sorted(list){
+  return list.map(i => ({...i, st: status(i.category, i.frozen_at)}))
+    .sort((a, b) => {
+      if (a.st.end && b.st.end) return a.st.end - b.st.end;
+      if (a.st.end) return -1; if (b.st.end) return 1;
+      return a.frozen_at.localeCompare(b.frozen_at);
+    });
+}
+
+function render(){
+  const q = $('#search').value.trim().toLowerCase();
+  const all = sorted(items);
+  const counts = {all: all.length, bad:0, warn:0, ok:0};
+  all.forEach(i => { if (counts[i.st.level] != null) counts[i.st.level]++; });
+
+  $('#count').textContent = all.length === 1 ? '1 Sache eingefroren' : `${all.length} Sachen eingefroren`;
+  $('#chips').innerHTML = FILTERS.map(f =>
+    `<button class="chip" data-f="${f.id}" aria-pressed="${filter === f.id}">${f.label} ${counts[f.id]}</button>`).join('');
+
+  const shown = all.filter(i =>
+    (filter === 'all' || i.st.level === filter) &&
+    (!q || i.name.toLowerCase().includes(q) || catById(i.category).name.toLowerCase().includes(q)));
+
+  $('#list').innerHTML = shown.map(i => {
+    const c = catById(i.category);
+    return `<li><button class="item l-${i.st.level}" data-id="${esc(i.id)}">
+      <span class="bar"></span>
+      <span class="body">
+        <span class="top"><span class="name">${esc(i.name)}</span><span class="pill">${esc(i.st.label)}</span></span>
+        <div class="meta">${c.icon} ${esc(c.name)}${i.amount ? ' · ' + esc(i.amount) : ''}</div>
+        <div class="dates">eingefroren ${fmt(parseISO(i.frozen_at))}${i.st.end ? ' · am besten bis ' + fmt(i.st.end) : ''}</div>
+      </span></button></li>`;
+  }).join('');
+
+  const empty = $('#empty');
+  if (!all.length) {
+    empty.hidden = false;
+    empty.innerHTML = `<div class="big">🧊</div><p>Noch nichts eingefroren.<br>Tippe auf <b>+</b>, um etwas hinzuzufügen.</p>
+      ${sb ? '' : '<button class="link" id="demoBtn">Beispieldaten laden</button>'}`;
+  } else if (!shown.length) {
+    empty.hidden = false; empty.innerHTML = `<p>Nichts gefunden.</p>`;
+  } else empty.hidden = true;
+}
+
+function updateHint(){
+  const c = catById($('#fCat').value), date = $('#fDate').value;
+  const h = $('#hint');
+  if (c.max == null) { h.className = 'hint'; h.innerHTML = `${c.icon} <b>${esc(c.name)}</b>: keine Empfehlung hinterlegt.`; return; }
+  if (!date) { h.className = 'hint'; h.innerHTML = `${c.icon} <b>${esc(c.name)}</b>: ${rangeLabel(c)}`; return; }
+  const st = status(c.id, date);
+  h.className = 'hint l-' + st.level;
+  h.innerHTML = `${c.icon} <b>${esc(c.name)}</b>: ${rangeLabel(c)} haltbar<br>Am besten aufbrauchen bis <b>${fmt(st.end)}</b> (${esc(st.label)})`;
+}
+
+function openSheet(item){
+  editingId = item ? item.id : null;
+  catTouched = !!item;
+  $('#sheetTitle').textContent = item ? 'Bearbeiten' : 'Einfrieren';
+  $('#fName').value = item ? item.name : '';
+  $('#fCat').value = item ? item.category : 'sonstiges';
+  $('#fDate').value = item ? item.frozen_at : toISO(today0());
+  $('#fAmount').value = item ? item.amount : '';
+  $('#doneBtn').hidden = !item;
+  $('#nameErr').style.display = 'none';
+  const names = Names.get();
+  items.forEach(i => { const k = i.name.toLowerCase(); if (!names[k]) names[k] = {name:i.name, category:i.category}; });
+  $('#names').innerHTML = Object.values(names).map(n => `<option value="${esc(n.name)}">`).join('');
+  updateHint();
+  $('#sheet').showModal();
+  if (!item) setTimeout(() => $('#fName').focus(), 50);
+}
+
+async function save(e){
+  e.preventDefault();
+  const name = $('#fName').value.trim();
+  if (!name) { $('#nameErr').style.display = 'block'; $('#fName').focus(); return; }
+  const data = {
+    name,
+    category: $('#fCat').value,
+    frozen_at: $('#fDate').value || toISO(today0()),
+    amount: $('#fAmount').value.trim(),
+  };
+  $('#saveBtn').disabled = true;
+  try {
+    if (editingId) await Store.update(editingId, data);
+    else await Store.add({id: newId(), created_at: new Date().toISOString(), ...data});
+  } catch (err) { showToast('Speichern fehlgeschlagen – Internet?'); return; }
+  finally { $('#saveBtn').disabled = false; }
+  Names.remember(name, data.category);
+  $('#sheet').close();
+  await reload();
+}
+
+let toastTimer, lastRemoved = null;
+async function markDone(){
+  const item = items.find(i => i.id === editingId);
+  if (!item) return;
+  try { await Store.remove(item.id); } catch { showToast('Löschen fehlgeschlagen – Internet?'); return; }
+  lastRemoved = item;
+  $('#sheet').close();
+  await reload();
+  showToast(`„${item.name}“ aufgebraucht`, true);
+}
+function showToast(text, undo = false){
+  $('#toastText').textContent = text;
+  $('#toastUndo').hidden = !undo;
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 5000);
+}
+
+async function loadDemo(){
+  const t = today0(), ago = (m, d = 0) => { const x = addMonths(t, -m); x.setDate(x.getDate() - d); return toISO(x); };
+  const demo = [
+    ['Hackfleisch gemischt','hack',ago(2,10),'500 g'],
+    ['Bolognese','gekocht',ago(0,20),'3 Portionen'],
+    ['Hähnchenbrust','gefluegel',ago(3),'4 Stück'],
+    ['Lachsfilet','fisch_fett',ago(4),'2 Stück'],
+    ['Erbsen','gemuese',ago(1),'1 Beutel'],
+    ['Himbeeren','obst',ago(9),'300 g'],
+    ['Brötchen','brot',ago(0,5),'6 Stück'],
+    ['Eiswürfel Kräuter','kraeuter',ago(2),'1 Schale'],
+    ['Pizzateig','sonstiges',ago(1,3),'2 Kugeln'],
+  ];
+  for (const [name, category, frozen_at, amount] of demo) {
+    await Store.add({id: newId(), created_at: new Date().toISOString(), name, category, frozen_at, amount});
+    Names.remember(name, category);
+  }
+  await reload();
+}
+
+let loaded = false;
+async function reload(){
+  try { items = await Store.list(); loaded = true; }
+  catch (err) { if (!loaded) items = []; showToast('Laden fehlgeschlagen – Internet?'); }
+  render();
+}
+
+/* ---------- Events ---------- */
+$('#fCat').innerHTML = CATS.map(c => `<option value="${c.id}">${c.icon} ${c.name} (${rangeLabel(c)})</option>`).join('');
+$('#quick').innerHTML = QUICK_AMOUNTS.map(a => `<button type="button" data-a="${a}">${a}</button>`).join('');
+$('#infoTable').innerHTML = CATS.map(c => `<tr><td>${c.icon} ${c.name}</td><td>${rangeLabel(c)}</td></tr>`).join('');
+
+$('#addBtn').onclick = () => openSheet(null);
+$('#infoBtn').onclick = () => $('#info').showModal();
+$('#form').addEventListener('submit', save);
+$('#doneBtn').onclick = markDone;
+$('#search').addEventListener('input', render);
+$('#fCat').addEventListener('change', () => { catTouched = true; updateHint(); });
+$('#fDate').addEventListener('change', updateHint);
+$('#fName').addEventListener('input', () => {
+  $('#nameErr').style.display = 'none';
+  if (catTouched) return;
+  const known = Names.get()[$('#fName').value.trim().toLowerCase()];
+  if (known) { $('#fCat').value = known.category; updateHint(); }
+});
+$('#quick').addEventListener('click', e => { const a = e.target.dataset.a; if (a) $('#fAmount').value = a; });
+$('#chips').addEventListener('click', e => { const f = e.target.closest('[data-f]'); if (f) { filter = f.dataset.f; render(); } });
+$('#list').addEventListener('click', e => {
+  const b = e.target.closest('[data-id]'); if (!b) return;
+  const item = items.find(i => i.id === b.dataset.id); if (item) openSheet(item);
+});
+$('#empty').addEventListener('click', e => { if (e.target.id === 'demoBtn') loadDemo(); });
+$('#toastUndo').onclick = async () => {
+  if (lastRemoved) { await Store.add(lastRemoved); lastRemoved = null; await reload(); }
+  $('#toast').classList.remove('show');
+};
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+});
+
+/* ---------- Login & Live-Sync ---------- */
+let channel = null;
+function showLogin(){
+  $('#login').hidden = false; $('#accountBox').hidden = true; $('#userInfo').textContent = '';
+  if (channel) { sb.removeChannel(channel); channel = null; }
+  items = []; render();
+}
+async function afterLogin(session){
+  $('#login').hidden = true;
+  $('#accountBox').hidden = false;
+  $('#userInfo').textContent = `Angemeldet als ${session.user.email}`;
+  await reload();
+  if (!channel) channel = sb.channel('items-sync')
+    .on('postgres_changes', {event:'*', schema:'public', table:'items'}, () => reload())
+    .subscribe();
+}
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#loginErr'); err.style.display = 'none';
+  $('#loginBtn').disabled = true;
+  try {
+    const {data, error} = await sb.auth.signInWithPassword({email: $('#lEmail').value.trim(), password: $('#lPass').value});
+    if (error) throw error;
+    $('#lPass').value = '';
+    await afterLogin(data.session);
+  } catch (ex) {
+    err.textContent = /invalid/i.test(ex.message || '') ? 'E-Mail oder Passwort falsch.' : 'Anmeldung fehlgeschlagen – Internet?';
+    err.style.display = 'block';
+  } finally { $('#loginBtn').disabled = false; }
+});
+$('#logoutBtn').onclick = async () => { $('#info').close(); await sb.auth.signOut(); showLogin(); };
+
+async function start(){
+  if (!sb) { await reload(); return; }
+  const {data:{session}} = await sb.auth.getSession();
+  if (session) await afterLogin(session); else showLogin();
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') showLogin(); });
+  // Beim Zurückkehren in die App frisch laden (Handy war im Standby)
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && $('#login').hidden) reload(); });
+}
+start();
+</script>
+</body>
+</html>
